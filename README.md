@@ -8,6 +8,6 @@ SnappyBird has some very basic twitter querying abilities.  I'm going to be addi
 3. some F# Charting too
 
 
-![SnappyBird](snappybird.jpg "SnappyBird")
+![SnappyBird](https://github.com/aguerrera/SnappyBird/raw/master/snappybird.png "SnappyBird")
 
 SnappyBird loves you!
