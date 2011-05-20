@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SnappyBird", "src\SnappyBird.fsproj", "{60C9F0FF-321A-4DEC-8583-741EDD83A316}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SnappyBird.Tests", "tests\SnappyBird.Tests.fsproj", "{B6520334-0BA2-4D1D-B276-ACC31BA05041}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60C9F0FF-321A-4DEC-8583-741EDD83A316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60C9F0FF-321A-4DEC-8583-741EDD83A316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60C9F0FF-321A-4DEC-8583-741EDD83A316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60C9F0FF-321A-4DEC-8583-741EDD83A316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6520334-0BA2-4D1D-B276-ACC31BA05041}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6520334-0BA2-4D1D-B276-ACC31BA05041}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6520334-0BA2-4D1D-B276-ACC31BA05041}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6520334-0BA2-4D1D-B276-ACC31BA05041}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
