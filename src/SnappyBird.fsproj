@@ -61,9 +61,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TheInternet.fs" />
     <Compile Include="Twitter.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
+    <Compile Include="Output.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

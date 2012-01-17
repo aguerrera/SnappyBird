@@ -1,12 +1,13 @@
 ﻿
-module SnappyBird
+module SnappyBird.Twitter
 
     open System
+    open System.Collections.Generic;
     open System.IO
     open TweetSharp    
     open HtmlAgilityPack
 
-
+    let big_hash_of_tweets = new Dictionary<int64, TwitterSearchStatus>();
 
     let service = new TwitterService()
 
@@ -21,53 +22,11 @@ module SnappyBird
         printfn "%s, %s, %s" t.Name t.Query t.RawSource
         ()
 
-    let get_url_info url = 
-        try
-            let req = System.Net.WebRequest.Create(new Uri(url))
-            use resp = req.GetResponse()
-            let respuri = resp.ResponseUri.AbsoluteUri
-            use reader = new StreamReader(resp.GetResponseStream())
-            let html = reader.ReadToEnd()
-            let doc = new HtmlAgilityPack.HtmlDocument()
-            doc.LoadHtml(html) |> ignore
-            let titlenode = doc.DocumentNode.SelectSingleNode("//title")
-            let title = 
-                match titlenode with
-                | null -> ""
-                | _ -> titlenode.InnerText.Trim()
-            
-            (respuri, title, 1, url)
-        with
-            | :? System.Net.WebException as ex ->
-                    let wr = ex.Response :?> System.Net.HttpWebResponse
-                    (url, wr.StatusCode.ToString(), -1, "")
-
-            | _ as ex -> (url, ex.ToString(), 0, url)
-
-        
-    let unshorten url = 
-        try
-            let req = System.Net.WebRequest.Create(new Uri(url))
-            use resp = req.GetResponse()
-            let respuri = resp.ResponseUri
-            respuri.AbsoluteUri
-        with
-            | _ as ex -> "bad url=>" + url
-
-    let is_shortened url = 
-        let uri = new Uri(url)
-        let arr = uri.Host.Split('.')
-        let dmn = arr.[arr.Length - 2]
-        dmn.Length < 5
-
-    let get_uri url = 
-        if is_shortened(url) then
-            unshorten(url)
-        else
-            url
-
     let search (query:string)  = 
         let result = service.Search(query)
+        for tweet in result.Statuses do
+            if not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
+                big_hash_of_tweets.[tweet.Id] <- tweet
         result
 
     let get_tweets_for_screenname (sn:string)  = 
@@ -105,5 +64,39 @@ module SnappyBird
         statuses
 
     let as_tweetable ts = ts |> Seq.map ( fun t->  t :> ITweetable )
+
+
+    let print_via_screenname (tweets:seq<ITweetable>) (screen_name:string) = 
+        tweets
+            |> Seq.filter (fun t -> t.Author.ScreenName.Equals(screen_name, StringComparison.CurrentCultureIgnoreCase)  )
+            |> Seq.iter print_tweet
+
+
+    let print_tweets_from_screen_names (tweets:seq<ITweetable>) (screen_names:seq<string>) = 
+        screen_names
+            |> Seq.iter (fun sn ->
+                            printfn "user: %s" sn
+                            print_via_screenname tweets sn
+                            ()
+                        )
+
+
+    let get_authors_from_tweets (tweets:seq<ITweetable>) =
+        tweets
+            |> Seq.map (fun t -> t.Author.ScreenName )
+            |> Seq.distinct
+
+
+
+    let get_urls_from_tweets (tweets:seq<ITweetable>) = 
+            let tweetents = get_tweets_with_entities tweets |> Seq.toList
+            tweetents 
+            |> Seq.map ( fun t -> 
+                            let us = t.Entities.Urls |> Seq.map (fun u -> u.Value )
+                            (t.Author.ScreenName, us)
+                        )
+            |> Seq.toList  // get it in memory
+            |> List.filter (fun (_, urls) ->  (Seq.length urls > 0) )  // filter only those that have urls
+            |> List.map (fun (sn, urls) -> (sn, Seq.head urls))
 
 
