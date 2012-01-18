@@ -7,21 +7,27 @@ module SnappyBird.Twitter
     open TweetSharp    
     open HtmlAgilityPack
 
+    // this is a big hash of all the tweets.  useful for doing some ops
     let big_hash_of_tweets = new Dictionary<int64, TwitterSearchStatus>();
 
     let service = new TwitterService()
 
-    let urlencode (s:string) = 
-        System.Web.HttpUtility.UrlEncode(s)
-
+    // basic print_tweet function.  this can/should be updated
     let print_tweet (t:ITweetable) =
         printfn "%s\n%s\n" t.Author.ScreenName t.Text
         ()
 
+    // basic print_trend function.
     let print_trend (t:TwitterTrend) = 
         printfn "%s, %s, %s" t.Name t.Query t.RawSource
         ()
 
+    // convert your list a' into some ITweetables.
+    let as_tweetable ts = ts |> Seq.map ( fun t->  t :> ITweetable )
+
+    // meat and potatoes of this bad boy.
+    // using the Twitter Search api b/c there is no (little?) rate limiting (?).
+    // not an expert on this though.
     let search (query:string)  = 
         let result = service.Search(query)
         for tweet in result.Statuses do
@@ -29,10 +35,15 @@ module SnappyBird.Twitter
                 big_hash_of_tweets.[tweet.Id] <- tweet
         result
 
+    // get tweets for a screen name
     let get_tweets_for_screenname (sn:string)  = 
         let result = search("from:" + sn.Replace("@", "") )
         result.Statuses
 
+    // filter out your tweets with entities (urls).
+    // pretty sure that there are search.api methods for this,
+    // but it's just as relevant to filter out tweets that
+    // we own.
     let get_tweets_with_entities (tweets:seq<ITweetable>) = 
         let filtered = 
             tweets 
@@ -47,6 +58,8 @@ module SnappyBird.Twitter
 
     let get_tweets_for_searchterms ts = ts |> Seq.collect (fun q -> search(q).Statuses )
 
+    // scrape tweets from the actaul website.
+    // use in case you get throttled.
     let scrape_tweets sn = 
         let req = new System.Net.WebClient();
         let html  = req.DownloadString("http://twitter.com/" + sn);
@@ -62,9 +75,6 @@ module SnappyBird.Twitter
             status_ids
             |> Seq.map ( fun id -> service.GetTweet( id ) )
         statuses
-
-    let as_tweetable ts = ts |> Seq.map ( fun t->  t :> ITweetable )
-
 
     let print_via_screenname (tweets:seq<ITweetable>) (screen_name:string) = 
         tweets

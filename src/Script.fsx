@@ -60,7 +60,6 @@ weekly_trends |> Seq.iter print_trend
 let searchbox = @"
 @gruber
 @kottke
-@diveintomark
 @codinghorror
 @danieltosh
 @sportsguy33
@@ -99,8 +98,8 @@ Twitter.print_via_screenname xs "toptweets"
 let all_tweets = 
     tweets_from_screennames
     |> Seq.append xs 
-    |> Seq.append tweets_from_hashtags
-    |> Seq.append tweets_from_queryterms
+//    |> Seq.append tweets_from_hashtags
+//    |> Seq.append tweets_from_queryterms
     |> Seq.toList
 
 
@@ -167,4 +166,20 @@ let rawurls = urls
                 |> Seq.map (fun u -> TheInternet.get_uri(u))
 rawurls |> Seq.iter (fun u -> printfn "%s" u)
 
+let rawurl_list = rawurls |> Seq.toList
+
+
+let output_dir = @"c:\staging\snappy_output\"
+
+let get_thumb url = 
+    let fn = output_dir + Guid.NewGuid().ToString("N") + ".jpg"
+    printfn "getting thumb for %s" url
+    printfn "   saving to %s" fn
+    TheInternet.get_website_bitmap_and_save fn url 800 800
+    ()
+
+rawurl_list
+    |> Seq.take 10
+    |> Seq.toList
+    |> List.iter (fun u -> get_thumb u)
 

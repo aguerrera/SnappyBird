@@ -2,9 +2,13 @@
 
     open System
     open System.Collections.Generic;
+    open System.Drawing
     open System.IO
+    open System.Windows.Forms
     open HtmlAgilityPack
 
+    let urlencode (s:string) = 
+        System.Web.HttpUtility.UrlEncode(s)
 
     let get_url_info url = 
         try
@@ -50,3 +54,30 @@
             unshorten(url)
         else
             url
+
+
+    let get_website_bitmap (url:string) width height = 
+        use browser = new WebBrowser()
+        browser.ScrollBarsEnabled <- false
+        browser.Width <- width
+        browser.Height <- height
+
+        let bmp = new Bitmap(width, height)
+        let get_bitmap = 
+            browser.BringToFront()
+            browser.DrawToBitmap(bmp, new Rectangle(0, 0, width, height))
+
+        do browser.DocumentCompleted.Add(fun _-> get_bitmap)
+
+        browser.Navigate(url) |> ignore
+        while browser.ReadyState <> WebBrowserReadyState.Complete do 
+            Application.DoEvents()
+        bmp
+
+    let get_website_bitmap_and_save path url width height =
+        let bmp = get_website_bitmap url width height
+        let dir = Path.GetDirectoryName(path)
+        if not (Directory.Exists(dir)) then
+            Directory.CreateDirectory(dir) |> ignore
+        bmp.Save(path)
+        ()
