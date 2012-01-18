@@ -1,0 +1,18 @@
+﻿
+ - output to static html and csv files 
+ - pre populate with toptweets trends, hastags, or own friends, someone else's view, or other sources
+ - snappybirdbot
+ - use FsCharting for chart output
+    http://blogs.msdn.com/b/fsharpteam/archive/2011/04/15/getting-started-with-fsharpchart.aspx
+ - get friends of friends of friends -> subequent generations
+ - determine url quality
+ - do stock lookups
+
+.. semantics
+http://www.alchemyapi.com/tools/
+http://text-processing.com/docs/
+http://developer.zemanta.com/
+
+f#charting
+
+

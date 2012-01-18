@@ -31,6 +31,17 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\SnappyBird.XML</DocumentationFile>
   </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <ItemGroup>
+    <Compile Include="TheInternet.fs" />
+    <Compile Include="Twitter.fs" />
+    <None Include="Script.fsx" />
+    <None Include="packages.config" />
+    <Compile Include="Output.fs" />
+    <Content Include="ToDo.txt" />
+    <Compile Include="Bot.fs" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Hammock">
       <HintPath>..\packages\Hammock.1.2.3\lib\net40\Hammock.dll</HintPath>
@@ -61,16 +72,12 @@
       <HintPath>..\packages\TweetSharp.2.0.6\lib\4.0\TweetSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <ProjectReference Include="..\csharp\web_snapshot\SnappyBird.WebsiteSnapshotCSharpCheat.csproj">
+      <Name>SnappyBird.WebsiteSnapshotCSharpCheat</Name>
+      <Project>{2d6be9f5-33fe-4215-b4cb-4ac1305727f1}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="TheInternet.fs" />
-    <Compile Include="Twitter.fs" />
-    <None Include="Script.fsx" />
-    <None Include="packages.config" />
-    <Compile Include="Output.fs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

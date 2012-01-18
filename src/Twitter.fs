@@ -8,7 +8,7 @@ module SnappyBird.Twitter
     open HtmlAgilityPack
 
     // this is a big hash of all the tweets.  useful for doing some ops
-    let big_hash_of_tweets = new Dictionary<int64, TwitterSearchStatus>();
+    let big_hash_of_tweets = new Dictionary<int64, ITweetable>();
 
     let service = new TwitterService()
 
@@ -110,3 +110,16 @@ module SnappyBird.Twitter
             |> List.map (fun (sn, urls) -> (sn, Seq.head urls))
 
 
+    let get_dudes_following_this_screen_name (sn:string) = 
+        let result = service.ListFollowersOf(sn)
+        let dudes = new System.Collections.Generic.List<string>()
+        for item in result do
+            dudes.Add(item.ScreenName)
+            try
+                if not (big_hash_of_tweets.ContainsKey(item.Status.Id)) then
+                    big_hash_of_tweets.[item.Status.Id] <- item.Status
+                ()
+            with
+                | _ -> () |> ignore
+        let fdudes = Seq.toList <| dudes
+        fdudes

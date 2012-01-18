@@ -6,6 +6,7 @@
     open System.IO
     open System.Windows.Forms
     open HtmlAgilityPack
+    open SnappyBird.WebsiteSnapshotCSharpCheat
 
     let urlencode (s:string) = 
         System.Web.HttpUtility.UrlEncode(s)
@@ -56,26 +57,12 @@
             url
 
 
-    let get_website_bitmap (url:string) width height = 
-        use browser = new WebBrowser()
-        browser.ScrollBarsEnabled <- false
-        browser.Width <- width
-        browser.Height <- height
-
-        let bmp = new Bitmap(width, height)
-        let get_bitmap = 
-            browser.BringToFront()
-            browser.DrawToBitmap(bmp, new Rectangle(0, 0, width, height))
-
-        do browser.DocumentCompleted.Add(fun _-> get_bitmap)
-
-        browser.Navigate(url) |> ignore
-        while browser.ReadyState <> WebBrowserReadyState.Complete do 
-            Application.DoEvents()
+    let get_website_bitmap (url:string) browser_width browser_height snap_width snap_height = 
+        let bmp = WebSnapshot.GetThumbnail(url, browser_width, browser_height, snap_width, snap_height)
         bmp
 
-    let get_website_bitmap_and_save path url width height =
-        let bmp = get_website_bitmap url width height
+    let get_website_bitmap_and_save path url browser_width browser_height snap_width snap_height =
+        let bmp = get_website_bitmap url browser_width browser_height snap_width snap_height
         let dir = Path.GetDirectoryName(path)
         if not (Directory.Exists(dir)) then
             Directory.CreateDirectory(dir) |> ignore
