@@ -29,6 +29,7 @@ let print_tweet = Twitter.print_tweet
 
 
 // get whats relevant, hot, and ultimately pointless
+printfn "getting trends"
 let toptweets = Twitter.get_top_tweets()
 let current_trends = Twitter.service.ListCurrentTrends()
 let daily_trends = Twitter.service.ListDailyTrends()
@@ -49,6 +50,7 @@ let searchbox = @"
 @grantland33
 "
 
+printfn "getting my dudes"
 let dudes_i_follow = Twitter.get_dudes_this_screen_name_is_following "aguerrera"
 let dudes_following_me = Twitter.get_dudes_following_this_screen_name "aguerrera"
 
@@ -90,6 +92,7 @@ let q2 = search_terms |> List.filter ( fun s -> (not (s.StartsWith("#")) && not 
 let query_terms = List.append q1 q2
 
 // let's get a lot of tweets
+printfn "getting lots of tweets"
 let tweets_from_screennames = Twitter.get_tweets_for_screennames(screen_names) |> Twitter.as_tweetable |> Seq.toList
 let tweets_from_hashtags = Twitter.get_tweets_for_searchterms(hash_tags) |> Twitter.as_tweetable |> Seq.toList
 let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> Twitter.as_tweetable |> Seq.toList
@@ -101,14 +104,15 @@ Twitter.print_via_screenname tweets_from_screennames "codinghorror"
 Twitter.print_tweets_from_screen_names tweets_from_screennames screen_names
 
 // get the tweets from this mysterious "toptweets" user
+printfn "getting TOP TWEETS tweets"
 let toptweets_tweets = Twitter.get_tweets_for_screenname("toptweets") |> Twitter.as_tweetable |> Seq.toList
 Twitter.print_via_screenname toptweets_tweets "toptweets"
 
 let all_tweets = 
     tweets_from_screennames 
     |> Seq.append toptweets_tweets  // append the tweets from this mysterious toptweets user
-    //|> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
-    //|> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    |> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    |> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.toList
 
 // who are the authors of all these tweets
@@ -141,6 +145,7 @@ let authors_and_urls =
 // turns it into a map list of authors and their url infos.
 // what's a url info? it's a tuple of fullurl, page title, status [1/0], and original [ie shortened] url
 // i could put this async {} , but would it actually speed it up?  it's IO bound.
+printfn "getting author and url info. Long op!"
 let author_and_url_infos =                 
     authors_and_urls
         |> List.map ( fun (sn, urls) -> 
@@ -160,12 +165,14 @@ let urls = tweetents |> Seq.collect ( fun t -> t.Entities.Urls ) |> Seq.toList
 
 // honestly, i'm only interested in urls.
 // this is just a list of straight up url infos
+printfn "getting url info.  Long op!"
 let urlinfos = urls 
                 |> Seq.map (fun u -> u.Value)
                 |> Seq.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
                 |> Seq.toList
 
 // the raw unshortened (non crappy) url
+printfn "getting raw url info.  Long op!"
 let rawurls = urls 
                 |> Seq.map (fun u -> u.Value)
                 |> Seq.map (fun u -> TheInternet.get_uri(u)) // warning!  IO bound action.
@@ -188,6 +195,7 @@ let get_web_thumb url =
 // lets get print out some thumbnails
 // Waring: IO Bound!  this is slow!!! 
 // could use some async/parallization if it is being used as part of another set of instructions.
+printfn "dumping those thumbnails.  Long op!"
 rawurls
     |> Seq.toList
     |> List.iter (fun u -> get_web_thumb u)
