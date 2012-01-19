@@ -14,6 +14,9 @@
         else
             hc.ToString() + "0"
 
+    let build_index = 
+        // write last write date
+        ()
     let write_tweet_sheet = 
         // write query & date to html
         // get tweets, authors, links

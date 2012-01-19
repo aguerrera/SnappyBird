@@ -9,6 +9,7 @@
 #load "TheInternet.fs"
 #load "Twitter.fs"
 #load "Output.fs"
+#load "Bot.fs"
 
 open System
 open System.IO
@@ -45,19 +46,26 @@ let searchbox = @"
 @codinghorror
 @theonion
 @sportsguy33
+@grantland33
 "
 
-let my_dudes = Twitter.get_dudes_following_this_screen_name "aguerrera"
+let dudes_i_follow = Twitter.get_dudes_this_screen_name_is_following "aguerrera"
+let dudes_following_me = Twitter.get_dudes_following_this_screen_name "aguerrera"
+
+
+let split_chars = 
+    System.Environment.NewLine.ToCharArray()
+    |> Array.append [| ',' |] 
 
 // split up the terms
-let search_terms = searchbox.Split ( System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+let search_terms = searchbox.Split (split_chars, StringSplitOptions.RemoveEmptyEntries) |> Array.toList
 
 // get the screennames only
 let screen_names = 
     search_terms 
     |> List.filter ( fun s -> s.StartsWith("@") ) 
     |> List.map (fun s-> s.Replace("@", "") )
-    //|> List.append my_dudes  // i can opptionally append my_dudes to this. 
+    |> List.append dudes_i_follow  // i can opptionally append dudes_i_follow to this. 
     |> Seq.distinct
     |> Seq.toList
 
@@ -99,10 +107,9 @@ Twitter.print_via_screenname toptweets_tweets "toptweets"
 let all_tweets = 
     tweets_from_screennames 
     |> Seq.append toptweets_tweets  // append the tweets from this mysterious toptweets user
-//    |> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
-//    |> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    //|> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    //|> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.toList
-
 
 // who are the authors of all these tweets
 let authors = 
@@ -175,7 +182,7 @@ let get_web_thumb url =
     let path = output_dir + fn + ext
     printfn "getting thumb for %s" url
     printfn "   saving to %s" path
-    TheInternet.get_website_bitmap_and_save path url 1000 1000 300 300  
+    TheInternet.get_website_bitmap_and_save path url 1000 1000 600 600  
     ()
 
 // lets get print out some thumbnails

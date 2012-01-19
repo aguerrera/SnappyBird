@@ -9,6 +9,7 @@ module SnappyBird.Twitter
 
     // this is a big hash of all the tweets.  useful for doing some ops
     let big_hash_of_tweets = new Dictionary<int64, ITweetable>();
+    let big_hash_of_people = new Dictionary<string, ITweeter>();
 
     let service = new TwitterService()
 
@@ -33,6 +34,8 @@ module SnappyBird.Twitter
         for tweet in result.Statuses do
             if not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
                 big_hash_of_tweets.[tweet.Id] <- tweet
+            if not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then
+                big_hash_of_people.[tweet.Author.ScreenName] <- tweet.Author
         result
 
     // get tweets for a screen name
@@ -92,8 +95,12 @@ module SnappyBird.Twitter
 
 
     let get_authors_from_tweets (tweets:seq<ITweetable>) =
-        tweets
-            |> Seq.map (fun t -> t.Author.ScreenName )
+
+        let auths = seq { for tweet in tweets do
+                            if not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then  // i'm sneaking this in !
+                                big_hash_of_people.[tweet.Author.ScreenName] <- tweet.Author 
+                            yield tweet.Author.ScreenName }
+        auths
             |> Seq.distinct
 
 
@@ -109,8 +116,28 @@ module SnappyBird.Twitter
             |> List.filter (fun (_, urls) ->  (Seq.length urls > 0) )  // filter only those that have urls
             |> List.map (fun (sn, urls) -> (sn, Seq.head urls))
 
+    let get_dudes_this_screen_name_is_following (sn:string) = 
+        if not (big_hash_of_people.ContainsKey(sn)) then
+            let tweeter = service.GetUserProfileFor(sn)
+            big_hash_of_people.[tweeter.ScreenName] <- tweeter
+        let dude_bro = service.GetUserProfileFor(sn)
+        let result = service.ListFriendsOf(sn)
+        let dudes = new System.Collections.Generic.List<string>()
+        for item in result do
+            dudes.Add(item.ScreenName)
+            try
+                if not (big_hash_of_tweets.ContainsKey(item.Status.Id)) then
+                    big_hash_of_tweets.[item.Status.Id] <- item.Status
+                ()
+            with
+                | _ -> () |> ignore
+        let fdudes = Seq.toList <| dudes
+        fdudes
 
     let get_dudes_following_this_screen_name (sn:string) = 
+        if not (big_hash_of_people.ContainsKey(sn)) then
+            let tweeter = service.GetUserProfileFor(sn)
+            big_hash_of_people.[tweeter.ScreenName] <- tweeter
         let result = service.ListFollowersOf(sn)
         let dudes = new System.Collections.Generic.List<string>()
         for item in result do
@@ -118,6 +145,8 @@ module SnappyBird.Twitter
             try
                 if not (big_hash_of_tweets.ContainsKey(item.Status.Id)) then
                     big_hash_of_tweets.[item.Status.Id] <- item.Status
+                if not (big_hash_of_people.ContainsKey(item.ScreenName)) then
+                    big_hash_of_people.[item.ScreenName] <- item
                 ()
             with
                 | _ -> () |> ignore

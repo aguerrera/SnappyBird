@@ -26,6 +26,7 @@
                 | null -> ""
                 | _ -> titlenode.InnerText.Trim()
             
+            resp.Close()
             (respuri, title, 1, url)
         with
             | :? System.Net.WebException as ex ->
@@ -34,12 +35,13 @@
 
             | _ as ex -> (url, ex.ToString(), 0, url)
 
-        
+
     let unshorten url = 
         try
             let req = System.Net.WebRequest.Create(new Uri(url))
             use resp = req.GetResponse()
             let respuri = resp.ResponseUri
+            resp.Close()
             respuri.AbsoluteUri
         with
             | _ as ex -> "bad url=>" + url
