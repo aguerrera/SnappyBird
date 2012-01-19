@@ -31,10 +31,12 @@
         with
             | :? System.Net.WebException as ex ->
                     let wr = ex.Response :?> System.Net.HttpWebResponse
-                    (url, wr.StatusCode.ToString(), -1, "")
+                    if not (wr = null) then
+                        (url, wr.StatusCode.ToString(), -1, "")
+                    else
+                        (url, "403", -1, "")
 
             | _ as ex -> (url, ex.ToString(), 0, url)
-
 
     let unshorten url = 
         try
