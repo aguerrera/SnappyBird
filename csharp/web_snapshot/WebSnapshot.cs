@@ -73,7 +73,7 @@ namespace SnappyBird.WebsiteSnapshotCSharpCheat
                 browser.ScrollBarsEnabled = false;
                 browser.ScriptErrorsSuppressed = true;
                 browser.Navigate(Url);
-
+                browser.AllowNavigation = false;
                 // Wait for control to load page
                 while (browser.ReadyState != WebBrowserReadyState.Complete)
                 {

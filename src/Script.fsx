@@ -111,8 +111,8 @@ Twitter.print_via_screenname toptweets_tweets "toptweets"
 let all_tweets = 
     tweets_from_screennames 
     |> Seq.append toptweets_tweets  // append the tweets from this mysterious toptweets user
-    |> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
-    |> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    //|> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    //|> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.toList
 
 // who are the authors of all these tweets
@@ -145,15 +145,55 @@ let authors_and_urls =
 // turns it into a map list of authors and their url infos.
 // what's a url info? it's a tuple of fullurl, page title, status [1/0], and original [ie shortened] url
 // i could put this async {} , but would it actually speed it up?  it's IO bound.
+
+
 printfn "getting author and url info. Long op!"
+let get_author_and_url_info_async (sn, urls) =                 
+        async {
+            let infos = 
+                    urls 
+                    |> List.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
+            return (sn, infos)
+        }
+
+
 let author_and_url_infos =                 
     authors_and_urls
-        |> List.map ( fun (sn, urls) -> 
-                            let infos = 
-                                    urls 
-                                    |> List.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
-                            (sn, infos)
-                    )  
+    |> Seq.map get_author_and_url_info_async
+    |> Async.Parallel 
+    |> Async.RunSynchronously
+
+
+//let author_and_url_infos =                 
+//    authors_and_urls
+//        |> List.map ( fun (sn, urls) -> 
+//                            let infos = 
+//                                    urls 
+//                                    |> List.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
+//                            (sn, infos)
+//                    )  
+
+
+
+//let extractLinks url =
+//    async {
+//        let webClient = new System.Net.WebClient() 
+// 
+//        printfn "Downloading %s" url
+//        let html = webClient.DownloadString(url : string)
+//        printfn "Got %i bytes" html.Length
+// 
+//        let matches = System.Text.RegularExpressions.Regex.Matches(html, @"http://\S+")
+//        printfn "Got %i links" matches.Count
+// 
+//        return url, matches.Count
+//    };;
+// 
+//val extractLinks : string -> Async<string * int>
+// 
+//> Async.RunSynchronously (extractLinks "http://www.msn.com/");;
+
+
 
 // this does some filtering for tweets with entities (ie, hashtags/mentions/urls)
 let tweetents = Twitter.get_tweets_with_entities all_tweets |> Seq.toList
@@ -163,13 +203,6 @@ let hts = tweetents |> Seq.collect ( fun t -> t.Entities.HashTags ) |> Seq.toLis
 let mentions = tweetents |> Seq.collect ( fun t -> t.Entities.Mentions ) |> Seq.toList
 let urls = tweetents |> Seq.collect ( fun t -> t.Entities.Urls ) |> Seq.toList
 
-// honestly, i'm only interested in urls.
-// this is just a list of straight up url infos
-printfn "getting url info.  Long op!"
-let urlinfos = urls 
-                |> Seq.map (fun u -> u.Value)
-                |> Seq.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
-                |> Seq.toList
 
 // the raw unshortened (non crappy) url
 printfn "getting raw url info.  Long op!"
@@ -177,6 +210,7 @@ let rawurls = urls
                 |> Seq.map (fun u -> u.Value)
                 |> Seq.map (fun u -> TheInternet.get_uri(u)) // warning!  IO bound action.
                 |> Seq.toList
+printfn "ready!"
 
 // our dumping grounds.  no, you probably don't have this folder on your computer.
 let output_dir = @"c:\staging\snappy_output\"
@@ -199,6 +233,7 @@ printfn "dumping those thumbnails.  Long op!"
 rawurls
     |> Seq.toList
     |> List.iter (fun u -> get_web_thumb u)
+printfn "ready!"
 
 
 // PRINT OUT ALL OF OUR STUFF.
@@ -222,22 +257,19 @@ printfn "our authors and their urls!"
 url_map
     |> List.iter ( fun (sn, u) -> printfn "%s\t%s" sn u)  // print out the screenname/url
 
-printfn "author and url infos.  got to be a better way to print this"
-author_and_url_infos
-        |> Seq.iter (fun (sn, infos) -> 
-                            infos |> 
-                                List.iter (fun (u, t, s, _) -> printfn "%s\t%s\t%s" sn u t)
-                            ()
-                      )  
+//printfn "author and url infos.  got to be a better way to print this"
+//author_and_url_infos
+//        |> Seq.iter (fun (sn, infos) -> 
+//                            infos |> 
+//                                List.iter (fun (u, t, s, _) -> printfn "%s\t%s\t%s" sn u t)
+//                            ()
+//                      )  
 
 printfn "entities: url data and stuff"
 tweetents |> Seq.iter (fun t -> printfn "%s\n%s\n\n" t.Author.ScreenName t.Text)
 hts |> Seq.iter (fun h -> printfn "%s" h.Text)
 urls |> Seq.iter (fun u -> printfn "%s" u.Value)
 mentions |> Seq.iter (fun m -> printfn "%A\t=>\t%s\n" m.Id m.ScreenName)
-
-printfn "url infos"
-urlinfos |> Seq.iter (fun (u, t, s, o) -> printfn "%s\t%s\t%A" u t s)
 
 printfn "raw urls"
 rawurls |> Seq.iter (fun u -> printfn "%s" u)
