@@ -73,16 +73,26 @@ namespace SnappyBird.WebsiteSnapshotCSharpCheat
                 browser.ScrollBarsEnabled = false;
                 browser.ScriptErrorsSuppressed = true;
                 browser.Navigate(Url);
-                browser.AllowNavigation = false;
+                //browser.AllowNavigation = false;
                 // Wait for control to load page
+                int counter = 0;
                 while (browser.ReadyState != WebBrowserReadyState.Complete)
                 {
                     Application.DoEvents();
+                    if (browser.ReadyState == WebBrowserReadyState.Interactive || browser.ReadyState == WebBrowserReadyState.Loaded)
+                    {
+                        counter++;
+                    }
+                    if (counter == 100000)
+                    {
+                        break;
+                    }
                 }
 
                 // Render browser content to bitmap
                 _bmp = new Bitmap(BrowserWidth, BrowserHeight);
                 browser.DrawToBitmap(_bmp, new Rectangle(0, 0, BrowserWidth, BrowserHeight));
+                //browser.AllowNavigation = true;
             }
         }
 

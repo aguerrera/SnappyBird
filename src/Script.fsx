@@ -37,8 +37,6 @@ let weekly_trends = Twitter.service.ListWeeklyTrends()
 
 
 
-
-
 // my terms.
 // this could be @usernames, or #hashtags or random query terms
 let searchbox = @"
@@ -67,7 +65,7 @@ let screen_names =
     search_terms 
     |> List.filter ( fun s -> s.StartsWith("@") ) 
     |> List.map (fun s-> s.Replace("@", "") )
-    |> List.append dudes_i_follow  // i can opptionally append dudes_i_follow to this. 
+    //|> List.append dudes_i_follow  // i can opptionally append dudes_i_follow to this. 
     |> Seq.distinct
     |> Seq.toList
 
@@ -94,11 +92,11 @@ let query_terms = List.append q1 q2
 // let's get a lot of tweets
 printfn "getting lots of tweets"
 let tweets_from_screennames = Twitter.get_tweets_for_screennames(screen_names) |> Twitter.as_tweetable |> Seq.toList
-let tweets_from_hashtags = Twitter.get_tweets_for_searchterms(hash_tags) |> Twitter.as_tweetable |> Seq.toList
-let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> Twitter.as_tweetable |> Seq.toList
+//let tweets_from_hashtags = Twitter.get_tweets_for_searchterms(hash_tags) |> Twitter.as_tweetable |> Seq.toList
+//let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> Twitter.as_tweetable |> Seq.toList
 
 // filter out some of my tweets for this guy -------------v
-Twitter.print_via_screenname tweets_from_screennames "codinghorror"
+//Twitter.print_via_screenname tweets_from_screennames "codinghorror"
 
 // print out tweets from screennames
 Twitter.print_tweets_from_screen_names tweets_from_screennames screen_names
@@ -106,7 +104,7 @@ Twitter.print_tweets_from_screen_names tweets_from_screennames screen_names
 // get the tweets from this mysterious "toptweets" user
 printfn "getting TOP TWEETS tweets"
 let toptweets_tweets = Twitter.get_tweets_for_screenname("toptweets") |> Twitter.as_tweetable |> Seq.toList
-Twitter.print_via_screenname toptweets_tweets "toptweets"
+//Twitter.print_via_screenname toptweets_tweets "toptweets"
 
 let all_tweets = 
     tweets_from_screennames 
@@ -130,6 +128,7 @@ printfn "our authors and their urls!"
 url_map
     |> List.iter ( fun (sn, u) -> printfn "%s\t%s" sn u)  // print out the screenname/url
 
+
 // flatten authors and the urls map into a list of (author, [urls])
 let authors_and_urls = 
     authors
@@ -145,132 +144,133 @@ let authors_and_urls =
 // turns it into a map list of authors and their url infos.
 // what's a url info? it's a tuple of fullurl, page title, status [1/0], and original [ie shortened] url
 // i could put this async {} , but would it actually speed it up?  it's IO bound.
-
-
 printfn "getting author and url info. Long op!"
 let get_author_and_url_info_async (sn, urls) =                 
         async {
             let infos = 
                     urls 
-                    |> List.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
+                    |> List.map (fun u ->
+                                        printfn "getting %s: url: %s" sn u
+                                        TheInternet.get_url_info(u)
+                                        ) // warning!  IO bound action.
             return (sn, infos)
         }
 
-
+// run the job asyncronously not sure if this even works
+printfn "get authors and their infos.  asyncrhonously"
 let author_and_url_infos =                 
     authors_and_urls
+    //|> Seq.take 1
+    |> Seq.toList
     |> Seq.map get_author_and_url_info_async
     |> Async.Parallel 
     |> Async.RunSynchronously
+    |> Seq.toList
 
+printfn "let's get the urls."
+let my_urls = 
+        let xs = seq { for sn, info in author_and_url_infos do
+                    for (url,title,status,shorturl) in info do
+                        if (status = 1) then yield url
+                }
+        xs |> Seq.toList
 
-//let author_and_url_infos =                 
-//    authors_and_urls
-//        |> List.map ( fun (sn, urls) -> 
-//                            let infos = 
-//                                    urls 
-//                                    |> List.map (fun u -> TheInternet.get_url_info(u)) // warning!  IO bound action.
-//                            (sn, infos)
-//                    )  
-
-
-
-//let extractLinks url =
-//    async {
-//        let webClient = new System.Net.WebClient() 
-// 
-//        printfn "Downloading %s" url
-//        let html = webClient.DownloadString(url : string)
-//        printfn "Got %i bytes" html.Length
-// 
-//        let matches = System.Text.RegularExpressions.Regex.Matches(html, @"http://\S+")
-//        printfn "Got %i links" matches.Count
-// 
-//        return url, matches.Count
-//    };;
-// 
-//val extractLinks : string -> Async<string * int>
-// 
-//> Async.RunSynchronously (extractLinks "http://www.msn.com/");;
-
-
-
-// this does some filtering for tweets with entities (ie, hashtags/mentions/urls)
-let tweetents = Twitter.get_tweets_with_entities all_tweets |> Seq.toList
 
 //for hashtags/mentions/urls
-let hts = tweetents |> Seq.collect ( fun t -> t.Entities.HashTags ) |> Seq.toList
-let mentions = tweetents |> Seq.collect ( fun t -> t.Entities.Mentions ) |> Seq.toList
-let urls = tweetents |> Seq.collect ( fun t -> t.Entities.Urls ) |> Seq.toList
+let do_stuff_with_tweetents some_tweets = 
+    // this does some filtering for tweets with entities (ie, hashtags/mentions/urls)
+    let tweetents = Twitter.get_tweets_with_entities some_tweets |> Seq.toList
+    let hts = tweetents |> Seq.collect ( fun t -> t.Entities.HashTags ) |> Seq.toList
+    let mentions = tweetents |> Seq.collect ( fun t -> t.Entities.Mentions ) |> Seq.toList
+    let urls = tweetents |> Seq.collect ( fun t -> t.Entities.Urls ) |> Seq.toList
+
+    printfn "entities: url data and stuff"
+    tweetents |> Seq.iter (fun t -> printfn "%s\n%s\n\n" t.Author.ScreenName t.Text)
+    hts |> Seq.iter (fun h -> printfn "%s" h.Text)
+    urls |> Seq.iter (fun u -> printfn "%s" u.Value)
+    mentions |> Seq.iter (fun m -> printfn "%A\t=>\t%s\n" m.Id m.ScreenName)
+    ()
+//do_stuff_with_tweetents all_tweets
 
 
-// the raw unshortened (non crappy) url
-printfn "getting raw url info.  Long op!"
-let rawurls = urls 
-                |> Seq.map (fun u -> u.Value)
-                |> Seq.map (fun u -> TheInternet.get_uri(u)) // warning!  IO bound action.
-                |> Seq.toList
+let just_get_the_urls_from_the_tweets urls =
+    // the raw unshortened (non crappy) url
+    printfn "getting raw url info.  Long op!"
+    let get_actual_uri_async (url) =                 
+            async {
+                let info = TheInternet.get_uri(url)
+                return info
+            }
+
+    printfn "getting the async urls ready!"
+    let rs =                 
+        urls
+        |> Seq.toList
+        |> Seq.map get_actual_uri_async
+        |> Async.Parallel 
+        |> Async.RunSynchronously
+        |> Seq.toList
+    rs
+//let rawurls = just_get_the_urls_from_the_tweets
+
 printfn "ready!"
 
 // our dumping grounds.  no, you probably don't have this folder on your computer.
 let output_dir = @"c:\staging\snappy_output\"
 
+
 // helper func to get screenshots
 // useful b/c i'm generating a random filename, setting the path, and then setting browser/snapshot size
-let get_web_thumb url = 
-    let fn = Output.get_hash_string_for_obj(url)
-    let ext = ".jpg"
-    let path = output_dir + fn + ext
-    printfn "getting thumb for %s" url
-    printfn "   saving to %s" path
-    TheInternet.get_website_bitmap_and_save path url 1000 1000 600 600  
-    ()
+let get_web_thumb_async (url) =                 
+        async {
+            let fn = Output.get_hash_string_for_obj(url)
+            let ext = ".jpg"
+            let path = output_dir + fn + ext
+            printfn "getting thumb for %s" url
+            printfn "   saving to %s" path
+            TheInternet.get_website_bitmap_and_save path url 1200 1200 700 700  
+            ()
+        }
 
 // lets get print out some thumbnails
 // Waring: IO Bound!  this is slow!!! 
 // could use some async/parallization if it is being used as part of another set of instructions.
 printfn "dumping those thumbnails.  Long op!"
-rawurls
+my_urls
     |> Seq.toList
-    |> List.iter (fun u -> get_web_thumb u)
-printfn "ready!"
+    |> Seq.map get_web_thumb_async
+    |> Async.Parallel 
+    |> Async.RunSynchronously
+
+printfn "it might be running things async in parallel.  don't know!  ready!"
 
 
 // PRINT OUT ALL OF OUR STUFF.
+let print_our_stuff = 
+    printfn "top tweets"
+    toptweets |> Seq.iter (fun t -> print_tweet t)
 
-printfn "top tweets"
-toptweets |> Seq.iter (fun t -> print_tweet t)
+    printfn "daily trends"
+    daily_trends |> Seq.iter print_trend
 
-printfn "daily trends"
-daily_trends |> Seq.iter print_trend
+    printfn "current trends"
+    current_trends |> Seq.iter print_trend
 
-printfn "current trends"
-current_trends |> Seq.iter print_trend
+    printfn "weekly trends"
+    weekly_trends |> Seq.iter print_trend
 
-printfn "weekly trends"
-weekly_trends |> Seq.iter print_trend
+    printfn "our authors!"
+    authors |> Seq.sort |> Seq.iter (fun s -> printfn "%s" s)
 
-printfn "our authors!"
-authors |> Seq.sort |> Seq.iter (fun s -> printfn "%s" s)
+    printfn "our authors and their urls!"
+    url_map
+        |> List.iter ( fun (sn, u) -> printfn "%s\t%s" sn u)  // print out the screenname/url
 
-printfn "our authors and their urls!"
-url_map
-    |> List.iter ( fun (sn, u) -> printfn "%s\t%s" sn u)  // print out the screenname/url
-
-//printfn "author and url infos.  got to be a better way to print this"
-//author_and_url_infos
-//        |> Seq.iter (fun (sn, infos) -> 
-//                            infos |> 
-//                                List.iter (fun (u, t, s, _) -> printfn "%s\t%s\t%s" sn u t)
-//                            ()
-//                      )  
-
-printfn "entities: url data and stuff"
-tweetents |> Seq.iter (fun t -> printfn "%s\n%s\n\n" t.Author.ScreenName t.Text)
-hts |> Seq.iter (fun h -> printfn "%s" h.Text)
-urls |> Seq.iter (fun u -> printfn "%s" u.Value)
-mentions |> Seq.iter (fun m -> printfn "%A\t=>\t%s\n" m.Id m.ScreenName)
-
-printfn "raw urls"
-rawurls |> Seq.iter (fun u -> printfn "%s" u)
+    printfn "author and url infos.  got to be a better way to print this"
+    author_and_url_infos
+            |> Seq.iter (fun (sn, infos) -> 
+                                infos |> 
+                                    List.iter (fun (u, t, s, _) -> printfn "%s\t%s\t%s" sn u t)
+                                ()
+                          )  
 
