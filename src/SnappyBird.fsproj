@@ -36,11 +36,11 @@
   <ItemGroup>
     <Compile Include="TheInternet.fs" />
     <Compile Include="Twitter.fs" />
-    <None Include="Script.fsx" />
-    <None Include="packages.config" />
     <Compile Include="Output.fs" />
-    <Content Include="ToDo.txt" />
     <Compile Include="Bot.fs" />
+    <None Include="Script.fsx" />
+    <Content Include="ToDo.txt" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Hammock">

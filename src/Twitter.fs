@@ -32,9 +32,9 @@ module SnappyBird.Twitter
     let search (query:string)  = 
         let result = service.Search(query)
         for tweet in result.Statuses do
-            if not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
+            if not (tweet = null) && not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
                 big_hash_of_tweets.[tweet.Id] <- tweet
-            if not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then
+            if not (tweet = null) && not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then
                 big_hash_of_people.[tweet.Author.ScreenName] <- tweet.Author
         result
 
@@ -152,3 +152,8 @@ module SnappyBird.Twitter
                 | _ -> () |> ignore
         let fdudes = Seq.toList <| dudes
         fdudes
+
+    let clean_twitpic_url (s:string) = 
+        match s.StartsWith("http://twitpic.com") with
+        | true -> s + "/full"
+        | _ -> s

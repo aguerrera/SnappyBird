@@ -48,10 +48,9 @@ let searchbox = @"
 @grantland33
 "
 
-printfn "getting my dudes"
-let dudes_i_follow = Twitter.get_dudes_this_screen_name_is_following "aguerrera"
-let dudes_following_me = Twitter.get_dudes_following_this_screen_name "aguerrera"
-
+//printfn "getting my dudes"
+//let dudes_i_follow = Twitter.get_dudes_this_screen_name_is_following "aguerrera"
+//let dudes_following_me = Twitter.get_dudes_following_this_screen_name "aguerrera"
 
 let split_chars = 
     System.Environment.NewLine.ToCharArray()
@@ -92,8 +91,8 @@ let query_terms = List.append q1 q2
 // let's get a lot of tweets
 printfn "getting lots of tweets"
 let tweets_from_screennames = Twitter.get_tweets_for_screennames(screen_names) |> Twitter.as_tweetable |> Seq.toList
-//let tweets_from_hashtags = Twitter.get_tweets_for_searchterms(hash_tags) |> Twitter.as_tweetable |> Seq.toList
-//let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> Twitter.as_tweetable |> Seq.toList
+let tweets_from_hashtags = Twitter.get_tweets_for_searchterms(hash_tags) |> Twitter.as_tweetable |> Seq.toList
+let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> Twitter.as_tweetable |> Seq.toList
 
 // filter out some of my tweets for this guy -------------v
 //Twitter.print_via_screenname tweets_from_screennames "codinghorror"
@@ -109,8 +108,8 @@ let toptweets_tweets = Twitter.get_tweets_for_screenname("toptweets") |> Twitter
 let all_tweets = 
     tweets_from_screennames 
     |> Seq.append toptweets_tweets  // append the tweets from this mysterious toptweets user
-    //|> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
-    //|> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    |> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
+    |> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.toList
 
 // who are the authors of all these tweets
@@ -144,8 +143,8 @@ let authors_and_urls =
 // turns it into a map list of authors and their url infos.
 // what's a url info? it's a tuple of fullurl, page title, status [1/0], and original [ie shortened] url
 // i could put this async {} , but would it actually speed it up?  it's IO bound.
-printfn "getting author and url info. Long op!"
 let get_author_and_url_info_async (sn, urls) =                 
+        printfn "getting author and url info. Long op!"
         async {
             let infos = 
                     urls 
@@ -170,9 +169,9 @@ let author_and_url_infos =
 printfn "let's get the urls."
 let my_urls = 
         let xs = seq { for sn, info in author_and_url_infos do
-                    for (url,title,status,shorturl) in info do
-                        if (status = 1) then yield url
-                }
+                            for (url,title,status,shorturl) in info do
+                                if (status = 1) then yield url
+                    }
         xs |> Seq.toList
 
 
@@ -224,11 +223,12 @@ let output_dir = @"c:\staging\snappy_output\"
 let get_web_thumb_async (url) =                 
         async {
             let fn = Output.get_hash_string_for_obj(url)
+            let clean_url = Twitter.clean_twitpic_url url
             let ext = ".jpg"
             let path = output_dir + fn + ext
-            printfn "getting thumb for %s" url
+            printfn "getting thumb for %s" clean_url
             printfn "   saving to %s" path
-            TheInternet.get_website_bitmap_and_save path url 1200 1200 700 700  
+            TheInternet.get_website_bitmap_and_save path clean_url 1200 1200 700 700  
             ()
         }
 

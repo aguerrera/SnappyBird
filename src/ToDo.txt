@@ -1,18 +1,59 @@
 ﻿
- - output to static html and csv files 
- - pre populate with toptweets trends, hastags, or own friends, someone else's view, or other sources
- - snappybirdbot
- - use FsCharting for chart output
-    http://blogs.msdn.com/b/fsharpteam/archive/2011/04/15/getting-started-with-fsharpchart.aspx
- - get friends of friends of friends -> subequent generations
- - determine url quality
- - do stock lookups
+Take script.fsx and turn it into a "strategy" generator.
 
-.. semantics
-http://www.alchemyapi.com/tools/
-http://text-processing.com/docs/
-http://developer.zemanta.com/
+ output to static html and csv files 
+  - formatting/style.  god i hate doing this.
+  - create index
+  - create history/manifest
+  - create views
+      index
+		tweets
+	    profiles
+		    - tweets/hts/urls
+		urls
+			- profiles/hts/tweets
+		Trends
+			- urls/profiles/tweets/hts
 
-f#charting
+link quality
+ - do a check against reddit for it.  they'll have something i'm sure.
 
+f#charting - http://blogs.msdn.com/b/fsharpteam/archive/2011/04/15/getting-started-with-fsharpchart.aspx
+ - notable dimensions:
+	 profiles
+	 hashtags
+	 RTs
+	 Mentions
+	 Urls
+ - reports
+	tweets per dude
+	tweets per follower
+	tweets per friend
+	most prolific
+	links per dude
+	rts per dude
+	most mentions
+	most influential (followers + mentions / friends)
+ - are there timebound stats?
+
+Snappybirdbot
+ - query
+ - response strategy
+ - dictionary of terms/phrases
+ - follower strategy
+
+Spam detection
+ - female?
+ - links per tweet
+ - follwers vs friends, and absolute numbers (high-> spam)
+ - open cv to detect whether femail is blonde/attractive (sorry for judging you blond/attractive women!)
+
+Way off in the freakign future:
+	- semantics
+		http://www.alchemyapi.com/tools/
+		http://text-processing.com/docs/
+		http://developer.zemanta.com/
+	- get friends of friends of friends -> subequent generations
+	- determine url quality
+	- do stock lookups
 
