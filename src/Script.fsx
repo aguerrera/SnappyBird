@@ -46,6 +46,10 @@ let searchbox = @"
 @theonion
 @sportsguy33
 @grantland33
+@HackerNews
+@hotdogsladies
+@badbanana
+@wired
 "
 
 //printfn "getting my dudes"
@@ -98,7 +102,7 @@ let tweets_from_queryterms = Twitter.get_tweets_for_searchterms(query_terms) |> 
 //Twitter.print_via_screenname tweets_from_screennames "codinghorror"
 
 // print out tweets from screennames
-Twitter.print_tweets_from_screen_names tweets_from_screennames screen_names
+//Twitter.print_tweets_from_screen_names tweets_from_screennames screen_names
 
 // get the tweets from this mysterious "toptweets" user
 printfn "getting TOP TWEETS tweets"
@@ -111,6 +115,7 @@ let all_tweets =
     |> Seq.append tweets_from_hashtags  // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.append tweets_from_queryterms // append hashtag tweets. at your own risk. There are trends jammed in there (see above)
     |> Seq.toList
+
 
 // who are the authors of all these tweets
 let authors = 
@@ -174,7 +179,6 @@ let my_urls =
                     }
         xs |> Seq.toList
 
-
 //for hashtags/mentions/urls
 let do_stuff_with_tweetents some_tweets = 
     // this does some filtering for tweets with entities (ie, hashtags/mentions/urls)
@@ -192,25 +196,6 @@ let do_stuff_with_tweetents some_tweets =
 //do_stuff_with_tweetents all_tweets
 
 
-let just_get_the_urls_from_the_tweets urls =
-    // the raw unshortened (non crappy) url
-    printfn "getting raw url info.  Long op!"
-    let get_actual_uri_async (url) =                 
-            async {
-                let info = TheInternet.get_uri(url)
-                return info
-            }
-
-    printfn "getting the async urls ready!"
-    let rs =                 
-        urls
-        |> Seq.toList
-        |> Seq.map get_actual_uri_async
-        |> Async.Parallel 
-        |> Async.RunSynchronously
-        |> Seq.toList
-    rs
-//let rawurls = just_get_the_urls_from_the_tweets
 
 printfn "ready!"
 
@@ -218,19 +203,15 @@ printfn "ready!"
 let output_dir = @"c:\staging\snappy_output\"
 
 
-// helper func to get screenshots
-// useful b/c i'm generating a random filename, setting the path, and then setting browser/snapshot size
-let get_web_thumb_async (url) =                 
-        async {
-            let fn = Output.get_hash_string_for_obj(url)
-            let clean_url = Twitter.clean_twitpic_url url
-            let ext = ".jpg"
-            let path = output_dir + fn + ext
-            printfn "getting thumb for %s" clean_url
-            printfn "   saving to %s" path
-            TheInternet.get_website_bitmap_and_save path clean_url 1200 1200 700 700  
-            ()
-        }
+let get_web_thumb(url) =                 
+        let fn = Output.get_hash_string_for_obj(url)
+        let clean_url = Twitter.clean_twitter_url url
+        let ext = ".jpg"
+        let path = output_dir + fn + ext
+        printfn "getting thumb for %s" clean_url
+        printfn "   saving to %s" path
+        TheInternet.get_website_bitmap_and_save path clean_url 1200 1200 700 700  
+        ()
 
 // lets get print out some thumbnails
 // Waring: IO Bound!  this is slow!!! 
@@ -238,11 +219,7 @@ let get_web_thumb_async (url) =
 printfn "dumping those thumbnails.  Long op!"
 my_urls
     |> Seq.toList
-    |> Seq.map get_web_thumb_async
-    |> Async.Parallel 
-    |> Async.RunSynchronously
-
-printfn "it might be running things async in parallel.  don't know!  ready!"
+    |> Seq.iter (fun u -> get_web_thumb u) // <- this is the sync version
 
 
 // PRINT OUT ALL OF OUR STUFF.

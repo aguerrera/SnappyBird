@@ -29,7 +29,7 @@ module SnappyBird.Twitter
     // meat and potatoes of this bad boy.
     // using the Twitter Search api b/c there is no (little?) rate limiting (?).
     // not an expert on this though.
-    let search (query:string)  = 
+    let search_sync (query:string)  = 
         let result = service.Search(query)
         for tweet in result.Statuses do
             if not (tweet = null) && not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
@@ -37,6 +37,21 @@ module SnappyBird.Twitter
             if not (tweet = null) && not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then
                 big_hash_of_people.[tweet.Author.ScreenName] <- tweet.Author
         result
+
+
+    let search (query:string)  = 
+        let run = 
+            async {
+                let result = service.Search(query)
+                for tweet in result.Statuses do
+                    if not (tweet = null) && not (big_hash_of_tweets.ContainsKey(tweet.Id)) then
+                        big_hash_of_tweets.[tweet.Id] <- tweet
+                    if not (tweet = null) && not (big_hash_of_people.ContainsKey(tweet.Author.ScreenName)) then
+                        big_hash_of_people.[tweet.Author.ScreenName] <- tweet.Author
+                return result
+            }
+        let res = Async.RunSynchronously run
+        res
 
     // get tweets for a screen name
     let get_tweets_for_screenname (sn:string)  = 
@@ -153,7 +168,11 @@ module SnappyBird.Twitter
         let fdudes = Seq.toList <| dudes
         fdudes
 
-    let clean_twitpic_url (s:string) = 
-        match s.StartsWith("http://twitpic.com") with
-        | true -> s + "/full"
-        | _ -> s
+    let clean_twitter_url (s:string) = 
+        if s.StartsWith("http://twitpic.com") then
+            s + "/full"
+        elif (s.StartsWith("http://twitter.com/") || s.StartsWith("https://twitter.com/") && s.IndexOf("#") = -1 && s.IndexOf("status") <> -1) then
+            s.Replace("http://twitter.com/", "https://mobile.twitter.com/").Replace("https://twitter.com/", "https://mobile.twitter.com/")
+        else
+            s
+

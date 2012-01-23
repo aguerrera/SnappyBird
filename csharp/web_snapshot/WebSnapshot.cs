@@ -69,6 +69,8 @@ namespace SnappyBird.WebsiteSnapshotCSharpCheat
         {
             using (WebBrowser browser = new WebBrowser())
             {
+                var stopWatch = new System.Diagnostics.Stopwatch();
+                stopWatch.Start();
                 browser.ClientSize = new Size(BrowserWidth, BrowserHeight);
                 browser.ScrollBarsEnabled = false;
                 browser.ScriptErrorsSuppressed = true;
@@ -83,12 +85,16 @@ namespace SnappyBird.WebsiteSnapshotCSharpCheat
                     {
                         counter++;
                     }
+                    if (stopWatch.Elapsed > TimeSpan.FromSeconds(4))
+                    {
+                        break;
+                    }
                     if (counter == 100000)
                     {
                         break;
                     }
                 }
-
+                stopWatch.Stop();
                 // Render browser content to bitmap
                 _bmp = new Bitmap(BrowserWidth, BrowserHeight);
                 browser.DrawToBitmap(_bmp, new Rectangle(0, 0, BrowserWidth, BrowserHeight));
