@@ -69,7 +69,7 @@ module SnappyBird.Twitter
         filtered
 
     let get_top_tweets () = 
-        let tweets = get_tweets_for_screenname("toptweets")
+        let tweets = get_tweets_for_screenname("toptweets") |> as_tweetable
         tweets
 
     let get_tweets_for_screennames sns = sns |> Seq.collect (fun sn -> get_tweets_for_screenname(sn))
@@ -168,6 +168,7 @@ module SnappyBird.Twitter
         let fdudes = Seq.toList <| dudes
         fdudes
 
+    // twitter urls are filthy with shortening
     let clean_twitter_url (s:string) = 
         if s.StartsWith("http://twitpic.com") then
             s + "/full"
@@ -175,4 +176,31 @@ module SnappyBird.Twitter
             s.Replace("http://twitter.com/", "https://mobile.twitter.com/").Replace("https://twitter.com/", "https://mobile.twitter.com/")
         else
             s
+
+
+
+
+    // terms from the daily_trends (could use weekly or current ,whatever)
+    // these are polluted with garbage
+    let get_all_but_worthless_trend_terms (trends:seq<TweetSharp.TwitterTrend>) = 
+        let trend_terms = trends
+                            |> Seq.map( fun t -> t.Name)
+                            |> Seq.distinct
+                            |> Seq.toList
+        trend_terms
+
+
+    // get whats relevant, hot, and ultimately pointless
+    // if you really want to, you can get all the trends.  
+    // but not sure why you'd want to
+    let get_all_trends = 
+        let current_trends = service.ListCurrentTrends()
+        let daily_trends = service.ListDailyTrends()
+        let weekly_trends = service.ListWeeklyTrends()
+        let all_trends = 
+            current_trends
+            |> Seq.append daily_trends
+            |> Seq.append weekly_trends
+            |> Seq.distinct
+        all_trends
 
